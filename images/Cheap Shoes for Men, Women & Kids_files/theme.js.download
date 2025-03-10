@@ -1,0 +1,299 @@
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+define([
+    'jquery',
+    'mage/smart-keyboard-handler',
+    'picturefill',
+    'tablesaw',
+    'scrolllock',
+    'globalVars',
+    'underscore',
+    'floatlabels',
+    'objectfit',
+    'lazysizes',
+    'mage/mage',
+    'mage/ie-class-fixer',
+    'domReady!',
+    'Magento_Ui/js/lib/view/utils/async',
+    'matchheights'
+], function (
+    $,
+    keyboardHandler,
+    picturefill,
+    Tablesaw,
+    bodyScrollLock,
+    globalVars,
+    _
+) {
+    'use strict';
+
+    picturefill();
+    window.objectFitImages(null, { watchMQ: true });
+
+    // Init TableSaw
+    // DOM-ready auto-init of plugins.
+    // Many plugins bind to an "enhance" event to init themselves on dom ready, or when new markup is inserted into the DOM
+    // Use raw DOMContentLoaded instead of shoestring (may have issues in Android 2.3, exhibited by stack table)
+    if (!('Tablesaw' in window)) {
+        throw new Error('Tablesaw library not found.');
+    }
+    if (!('init' in Tablesaw)) {
+        throw new Error(
+            'Your tablesaw-init.js is newer than the core Tablesaw version.'
+        );
+    }
+
+    Tablesaw.init();
+
+    // Set user-agent for iOS Safari
+    var ua, iOS, webkit, iOSSafari;
+
+    ua = window.navigator.userAgent;
+    iOS = !!ua.match(/iPad/i) || !!ua.match(/iPhone/i);
+    webkit = !!ua.match(/WebKit/i);
+    iOSSafari =
+        iOS &&
+        webkit &&
+        !ua.match(/CriOS/i) &&
+        !ua.match(/OPiOS/i) &&
+        !ua.match(/EdgiOS/i);
+    if (iOSSafari) {
+        $('html').addClass('ios-safari');
+    }
+
+    var floatlabels = new window.FloatLabels(
+        '.form:not(.minisearch):not(.form-cart), .form-address-edit, .form-address-new, #discount-coupon-form, .box-tocart, .review-form',
+        {
+            style: 1
+        }
+    );
+
+    if ($('body').hasClass('checkout-cart-index')) {
+        if (
+            $('#co-shipping-method-form .fieldset.rates').length > 0 &&
+            $('#co-shipping-method-form .fieldset.rates :checked').length === 0
+        ) {
+            $('#block-shipping').on('collapsiblecreate', function () {
+                $('#block-shipping').collapsible('forceActivate');
+            });
+        }
+    }
+
+    var positionStickySupport = (function () {
+        var el = document.createElement('a'),
+            mStyle = el.style;
+
+        mStyle.cssText =
+            'position:sticky;position:-webkit-sticky;position:-ms-sticky;';
+        return mStyle.position.indexOf('sticky') !== -1;
+    })();
+
+    if (!positionStickySupport) {
+        $('.cart-summary').mage('sticky', {
+            container: '#maincontent'
+        });
+    }
+
+    $('.panel.header > .header.links').clone().appendTo('#store\\.links');
+
+    $('[data-js-toggle]').on('click', function (e) {
+        var $this = $(this),
+            _dataTarget;
+
+        _dataTarget = $this.find($this.data('js-toggle-target'));
+
+        if ($this.parent().hasClass('footer') &&
+            ($(e.target).parent().parent().hasClass('item') || $(e.target).parent().hasClass('item'))) {
+            return;
+        }
+
+        if ($this.hasClass('nav') && $this.hasClass('heading') && $(window).width() >= globalVars.tweakpointNavToggle) {
+            return;
+        }
+
+        e.preventDefault();
+
+        if (_dataTarget.length > 0) {
+            _dataTarget.toggleClass($this.data('js-toggle'));
+            return;
+        }
+
+        $this.toggleClass($this.data('js-toggle'));
+    });
+
+    $('.product-item-details').each(function () {
+        var $reviewSummary = $(this).find('.product-reviews-summary'),
+            $productItemsName = $(this).find('.product-item-name.name');
+
+        if ($reviewSummary.length > 0 && $productItemsName.length > 0) {
+            $reviewSummary.appendTo($productItemsName);
+        }
+    });
+
+    $('.product-item .action.tocart').on('click', function (e) {
+        var $productItemDetails = $(this).closest('.product-item-details'),
+            $swatches = $productItemDetails.find('[class^="swatch-opt-"]');
+
+        if (
+            $swatches.length > 0 &&
+            !$productItemDetails.hasClass('show-swatches')
+        ) {
+            $productItemDetails.addClass('show-swatches');
+            e.preventDefault();
+        }
+    });
+
+    $.async('.product-image-wrapper', function callback(domEl) {
+        // console.log(domEl);
+    });
+
+    var targetNodes = $('.product-image-photo'),
+        MutationObserver =
+            window.MutationObserver || window.WebKitMutationObserver,
+        myObserver = new MutationObserver(mutationHandler),
+        obsConfig = {
+            childList: false,
+            characterData: true,
+            attributes: true,
+            subtree: false
+        };
+
+    // --- Add a target node to the observer. Can only add one node at a time.
+    targetNodes.each(function () {
+        myObserver.observe(this, obsConfig);
+    });
+
+    function mutationHandler(mutationRecords) {
+        var $photo;
+
+        mutationRecords.forEach(function (mutation) {
+            if (mutation.type === 'attributes' && mutation.target) {
+                $photo = $(mutation.target);
+
+                if ($photo.hasClass('swatch-option-loading')) {
+                    $photo.parent().parent().parent().addClass('is-loading');
+                } else {
+                    $photo.parent().parent().parent().removeClass('is-loading');
+                }
+            }
+        });
+    }
+
+    /*
+Add scroll lock class to html when toggling navigation menu or minicart
+ */
+
+    function scrollLockMutationObservers() {
+        var mConfig = { attributes: true },
+            mObserver,
+            mCallback,
+            mObserver2,
+            mObserver3,
+            mObserver4,
+            mCallback2,
+            mCallback3,
+            mCallback4,
+            $body = $('body'),
+            $html = $('html'),
+            $navigation = $('.navigation'),
+            $searchLabel = $('.minisearch .search > .label'),
+            $miniCartBlock = $('[data-block="minicart"]');
+        // Callback function to execute when mutations are observed
+
+        mCallback3 = function () {
+            if ($searchLabel.hasClass('active') && $(window).width() < 1024) {
+                $body.addClass('is-search-open');
+                $html.addClass('scroll-locked');
+            } else {
+                $body.removeClass('is-search-open');
+                $html.removeClass('scroll-locked');
+            }
+        };
+
+        // Callback function to execute when mutations are observed
+        mCallback4 = function () {
+            var $modalContent = $(
+                '.modals-wrapper .modal-popup:not(.popup-authentication) .modal-content'
+            );
+
+            if ($body.hasClass('_has-modal') && $(window).width() < 1024) {
+                if ($modalContent.length > 0) {
+                    bodyScrollLock.disableBodyScroll($modalContent[0]);
+                    $('body').css('overflow', 'hidden');
+                }
+            } else {
+                if ($modalContent.length > 0) {
+                    bodyScrollLock.enableBodyScroll($modalContent[0]);
+                    $('body').css('overflow', 'initial');
+                }
+            }
+        };
+
+        mCallback2 = function () {
+            $navigation.scrollTop(0);
+        };
+
+        mCallback = function () {
+            if ($miniCartBlock.hasClass('active')) {
+                $body.addClass('is-minicart-open');
+                $html.addClass('scroll-locked');
+            } else {
+                $body.removeClass('is-minicart-open');
+                $html.removeClass('scroll-locked');
+            }
+        };
+
+        if ($miniCartBlock.length > 0) {
+            mObserver = new MutationObserver(mCallback);
+            mObserver.observe($miniCartBlock[0], mConfig);
+        }
+
+        if ($navigation.length > 0) {
+            mObserver2 = new MutationObserver(mCallback2);
+            mObserver2.observe($navigation[0], mConfig);
+        }
+
+        if ($searchLabel.length > 0) {
+            mObserver3 = new MutationObserver(mCallback3);
+            mObserver3.observe($searchLabel[0], mConfig);
+        }
+
+        if ($body.length > 0) {
+            mObserver4 = new MutationObserver(mCallback4);
+            mObserver4.observe($body[0], mConfig);
+        }
+    }
+
+    /*
+        end add scroll lock class to html
+    */
+    scrollLockMutationObservers();
+    keyboardHandler.apply();
+
+    var vhCalc = function () {
+            document.documentElement.style.setProperty(
+                '--vhCalc',
+                window.innerHeight + 'px'
+            );
+        },
+        vhCalcResize = _.debounce(function () {
+            vhCalc();
+        }, 250);
+
+    window.addEventListener('resize', vhCalcResize);
+    vhCalc();
+
+    $(document).ready(function () {
+        $('.product-items').on('init', function (event, slick) {
+            $('.product-item-product').matchHeight();
+            $('.price-box').matchHeight();
+        });
+
+        $('body').on('click', '.block-products-list .slick-arrow', function () {
+            $('.product-item-product').matchHeight();
+            $('.price-box').matchHeight();
+        });
+    });
+});

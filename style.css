@@ -1,0 +1,106 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Roboto", serif;
+  transition: smooth;
+}
+body {
+  background-color: #f5f7f6;
+}
+.luxesteps {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.link-dark {
+  font-size: small;
+}
+h1 {
+  color: #ec8229 !important;
+  font-size: 3rem;
+}
+nav a {
+  color: black !important;
+  font-weight: bold !important;
+}
+
+nav a:hover,
+.btn:hover,
+li a:hover,
+.fa-brands,
+.icon {
+  color: #ec8229 !important;
+}
+footer {
+  background-color: #272727 !important;
+}
+.list-unstyled {
+  line-height: 3rem;
+}
+form .btn,
+.form-label .btn,
+.card .btn {
+  background-color: #ec8229 !important;
+}
+form .btn:hover,
+.form-label .btn:hover,
+.card .btn:hover {
+  color: #f5f7f6 !important;
+}
+.form-label {
+  background: linear-gradient(to bottom, #d3a576, #faf0b1) !important;
+}
+
+/* women */
+@keyframes luxe-shoe {
+  0% {
+    transform: scale(1.1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1.1);
+  }
+}
+.luxe-shoe:hover {
+  animation: luxe-shoe 2s;
+  border-bottom: 2px solid #ec8229 !important;
+}
+
+/* contact section */
+.newsletter {
+  background: url("https://tse1.mm.bing.net/th?id=OIP.ISdUKrVAXHhL-pligOjgmAHaE8&pid=Api&P=0&h=180")
+    no-repeat center center;
+  background-size: cover;
+  color: white;
+  padding: 80px 20px;
+  text-align: center;
+  position: relative;
+}
+.newsletter .overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+}
+.newsletter .content {
+  position: relative;
+  z-index: 2;
+}
+.newsletter input {
+  max-width: 400px;
+}
+
+/* pay logo section */
+img {
+  max-width: 100%;
+  max-height: 100%;
+}
+.pay {
+  width: 100px;
+  height: 120px;
+}

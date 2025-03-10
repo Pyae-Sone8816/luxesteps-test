@@ -1,0 +1,47 @@
+define(
+    [
+        'jquery',
+        'jquery-ui-modules/widget'
+    ], function ($) {
+        'use strict';
+
+        return function (target) {
+            $.widget('mage.quickSearch', target, {
+                _create: function () {
+                    this._super();
+
+                    // Add Close button placeholder to catch close click event
+                    // and route it to close the minisearch overlay
+                    $(this.element).parent().prepend('<div class="minisearch-close-button"></div>');
+                    $(this.element).parent().find('.minisearch-close-button').on('click', function (e) {
+                        this.autoComplete.hide();
+                        this.element.blur();
+                    }.bind(this));
+
+                    // Stop the search from closing automatically on Blur (loses focus), when it is in
+                    // small screen mode
+                    this.element.off('blur');
+                    this.element.on('blur', $.proxy(function () {
+                        if (!this.searchLabel.hasClass('active')) {
+                            return;
+                        }
+
+                        setTimeout($.proxy(function () {
+                            if (this.autoComplete.is(':hidden')) {
+                                this.setActiveState(false);
+                            } else {
+                                this.element.trigger('focus');
+                            }
+                            if ($(window).width() >= 992) {
+                                this.autoComplete.hide();
+                            }
+                            this._updateAriaHasPopup(false);
+                        }, this), 250);
+                    }, this));
+                }
+            });
+
+            return $.mage.quickSearch;
+        };
+    }
+);

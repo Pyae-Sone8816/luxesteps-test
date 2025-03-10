@@ -1,0 +1,84 @@
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+
+define([
+    'jquery',
+    'underscore',
+    'floatlabels',
+    'domReady!'
+], function ($, _) {
+    'use strict';
+
+    var checkoutContainerSelector = '.checkout-container',
+        checkoutContainerFormSelector = '.form:not(.fl-form)',
+        $checkoutContainer,
+        formObserver,
+        observerConfig,
+        _throttledCall;
+
+    window._checkoutFloatLabels = [];
+
+    // Notify me of childList
+    observerConfig = {
+        childList: true
+    };
+
+    _throttledCall =  _.throttle(addFloatingLabels, 4000);
+
+    formObserver = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'childList') {
+                _throttledCall();
+            }
+        });
+    });
+
+    function addFloatingLabels() {
+        var $checkoutContainerForm = $(checkoutContainerSelector).find(checkoutContainerFormSelector);
+
+        if ($checkoutContainerForm.length > 0) {
+            window._checkoutFloatLabels.push(new window.FloatLabels(checkoutContainerSelector + ' ' + checkoutContainerFormSelector, {
+                style: 1
+            }));
+        } else {
+            for (var i = 0; i < window._checkoutFloatLabels.length; i++) {
+                window._checkoutFloatLabels[i].rebuild();
+            }
+        }
+
+        //fixStreetAddressLabels();
+    }
+
+    function fixStreetAddressLabels() {
+        var $streetField = $('.field.street'),
+            labelText;
+
+        console.log($streetField);
+
+        if ($streetField.length <= 0) {
+            return;
+        }
+
+        labelText = $streetField.find('legend.label > span').text();
+        $streetField.find('[name="shippingAddress.street.0"] > .label').text(labelText);
+    }
+
+    $checkoutContainer = $(checkoutContainerSelector);
+
+    if ($checkoutContainer.length > 0) {
+        // Node, config
+        // In this case we'll listen to all changes to body and child nodes
+        formObserver.observe($checkoutContainer[0], observerConfig);
+
+        $(window).on('hashchange', function() {
+            addFloatingLabels();
+        });
+
+        // to target changed events on checkbox "billing and shipping same" so that float labels are initialized on Mutation correctly
+        $(document).on('click', 'input[name=billing-address-same-as-shipping]', function(){
+            addFloatingLabels();
+        });
+    }
+});
