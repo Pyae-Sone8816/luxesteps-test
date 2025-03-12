@@ -18,7 +18,6 @@ body {
 }
 h1 {
   color: #ec8229 !important;
-  font-size: 3rem;
 }
 nav a {
   color: black !important;
@@ -65,7 +64,7 @@ form .btn:hover,
   }
 }
 .luxe-shoe:hover {
-  animation: luxe-shoe 2s;
+  animation: luxe-shoe 3s;
   border-bottom: 2px solid #ec8229 !important;
 }
 
