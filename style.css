@@ -3,10 +3,10 @@
   padding: 0;
   box-sizing: border-box;
   font-family: "Roboto", serif;
-  transition: smooth;
 }
 body {
   background-color: #f5f7f6;
+  transition: smooth;
 }
 .luxesteps {
   position: sticky;
@@ -52,19 +52,12 @@ form .btn:hover,
 }
 
 /* women */
-@keyframes luxe-shoe {
-  0% {
-    transform: scale(1.1);
-  }
-  50% {
-    transform: scale(1.1);
-  }
-  100% {
-    transform: scale(1.1);
-  }
+
+.luxe-shoe {
+  transition: transform 0.4s ease-in-out;
 }
 .luxe-shoe:hover {
-  animation: luxe-shoe 3s;
+  transform: translateY(-10px);
   border-bottom: 2px solid #ec8229 !important;
 }
 
